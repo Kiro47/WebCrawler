@@ -10,7 +10,7 @@ public abstract class AbstractWebCrawler {
     * A list of domains that should not be searched.
     */
    protected ArrayList<String> blacklist = ["pornhub.com"];
-   //updated blacklist
+   //updated blacklist 
    /**
     * The maximum number of results to accumulate in the tree.
     */
