@@ -19,8 +19,9 @@ public class Program5 extends AbstractWebCrawler{
 
 	public static void main(String[] args) {
 		// Small test, to show it works.
+		// Can find webpages by searching for <a href= "" > and capturing within the arrows.
 		Program5 self = new Program5(100, "www.youtube.com");
-		System.out.println(self.getWebPage("https://www.google.com/webhp?sourceid=chrome-instant&ion=1&espv=2&ie=UTF-8#q=tacos", 80, ""));
+		System.out.println(self.getWebPage("https://www.google.com", 80, "/webhp?sourceid=chrome-instant&ion=1&espv=2&ie=UTF-8#q=tacos"));
 		
 	}
 
@@ -39,22 +40,22 @@ public class Program5 extends AbstractWebCrawler{
 	*
 	* Then read and return the incoming data from the socket.
 	*
-	* @param domain - the domain of the web server.
-	* @param port - the web server port (usually 80)
-	* @param page - the page to be loaded from the web server.
+	* @param domain - the domain of the web server. Ex: www.mtu.edu
+	* @param port - the web server port (usually 80, Port 443 for SSL) 
+	* @param page - the page to be loaded from the web server. ex: research/about/areas/
 	* @return - a String containing the content of the web page.
 	*/
 	// @Authors : James Helm , 
 	@Override
 	protected String getWebPage(String domain, int port, String page) {
-		// Honestly not sure what exactly the "page" is supposed to be.
+		domain += page;
 		String web = "";
 		String input = "";
 		
 		URL url = null;
 		BufferedReader reader = null;
 		
-		
+		// Try, because invalid URLs happen.
 		try {
 			url = new URL(domain);
 		} 
@@ -62,23 +63,29 @@ public class Program5 extends AbstractWebCrawler{
 			e.printStackTrace();
 		}
 		
-		try {
-			reader = new BufferedReader(new InputStreamReader(url.openStream()));
-		} 
-		catch (IOException e) {
-			e.printStackTrace();
+		// Make sure to stop if the URL is invalid.
+		if (url != null) {
+			
+				try {
+					// Begin reading the web page.
+					reader = new BufferedReader(new InputStreamReader(url.openStream()));
+			
+						// input is equal to the next line, and continues until it's null.
+						while ((input = reader.readLine())  != null) {
+								web += input;
+						}
+						// Now null, so close the stream to stop memory leak.
+							reader.close();
+			
+					} 
+				// Trap errors, shouldn't actually ever be hit, but you know.
+				catch (IOException e) {
+					e.printStackTrace();
+				}
+				
 		}
 		
-		try {
-			while ((input = reader.readLine())  != null) {
-				web += input;
-			}
-			reader.close();
-		} 
-		catch (IOException e) {
-			e.printStackTrace();
-		}
-		
+		// Return the entire web page into a single string.
 		return web;
 	}
 
