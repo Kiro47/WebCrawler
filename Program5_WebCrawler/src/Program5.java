@@ -1,3 +1,9 @@
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.MalformedURLException;
+import java.net.URL;
+
 /**
  * 
  * @author 
@@ -7,11 +13,15 @@
 public class Program5 extends AbstractWebCrawler{
 
 	public Program5( int resultsLimit, String ... blacklist ) {
-  	super(int resultsLimit, String ... blacklist);
+		// Variables here don't need to be redeclared, just passed on.
+  	super(resultsLimit, blacklist);
   }
 
 	public static void main(String[] args) {
-
+		// Small test, to show it works.
+		Program5 self = new Program5(100, "www.youtube.com");
+		System.out.println(self.getWebPage("https://www.google.com/webhp?sourceid=chrome-instant&ion=1&espv=2&ie=UTF-8#q=tacos", 80, ""));
+		
 	}
 
 	/**
@@ -34,10 +44,42 @@ public class Program5 extends AbstractWebCrawler{
 	* @param page - the page to be loaded from the web server.
 	* @return - a String containing the content of the web page.
 	*/
+	// @Authors : James Helm , 
 	@Override
 	protected String getWebPage(String domain, int port, String page) {
-		// TODO Auto-generated method stub
-		return null;
+		// Honestly not sure what exactly the "page" is supposed to be.
+		String web = "";
+		String input = "";
+		
+		URL url = null;
+		BufferedReader reader = null;
+		
+		
+		try {
+			url = new URL(domain);
+		} 
+		catch (MalformedURLException e) {
+			e.printStackTrace();
+		}
+		
+		try {
+			reader = new BufferedReader(new InputStreamReader(url.openStream()));
+		} 
+		catch (IOException e) {
+			e.printStackTrace();
+		}
+		
+		try {
+			while ((input = reader.readLine())  != null) {
+				web += input;
+			}
+			reader.close();
+		} 
+		catch (IOException e) {
+			e.printStackTrace();
+		}
+		
+		return web;
 	}
 
 	/**
@@ -90,7 +132,6 @@ public class Program5 extends AbstractWebCrawler{
 	*/
 	@Override
 	public WebTreeNode crawlWeb(String domain, int port, String page, String... searchTerms) {
-		// TODO Auto-generated method stub
 		return null;
 	}
 }
