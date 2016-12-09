@@ -45,8 +45,8 @@ public class Program5 extends AbstractWebCrawler{
 	* @param port - the web server port (usually 80, Port 443 for SSL) 
 	* @param page - the page to be loaded from the web server. ex: research/about/areas/
 	* @return - a String containing the content of the web page.
+	* @author James Helm
 	*/
-	// @Authors : James Helm , 
 	@Override
 	protected String getWebPage(String domain, int port, String page) {
 		domain += page;
@@ -97,6 +97,7 @@ public class Program5 extends AbstractWebCrawler{
   * "%s \t http://%s%s\n", matchedSearchTerms, domain, page
   *
   * @param root - print the subtree rooted at this node
+  * @author Stephen Reynolds
   */
 	@Override
 	public void preorderTraversalPrint(WebTreeNode root) {
