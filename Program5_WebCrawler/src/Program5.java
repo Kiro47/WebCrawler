@@ -3,6 +3,13 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Program 5: Web Crawler
@@ -83,6 +90,10 @@ public class Program5 extends AbstractWebCrawler{
 
 		// Try, because invalid URLs happen.
 		try {
+			// Check that domain begins with http://
+			if (domain.substring(0, 6) != "http://") {
+				domain = "http://" + domain;
+			}
 			url = new URL(domain);
 		} 
 		catch (MalformedURLException e) {
@@ -183,6 +194,34 @@ public class Program5 extends AbstractWebCrawler{
 	 */
 	@Override
 	public WebTreeNode crawlWeb(String domain, int port, String page, String... searchTerms) {
+//		String html = getWebPage(domain, port, page);
+//		for (String s : getLinks(html)) {
+//			System.out.println(s);
+//		}
+		
 		return null;
+	}
+	
+	/**
+	 * Return a list of urls for each link in a given web page.
+	 * @param html search for links here
+	 * @return list of urls
+	 * @author Stephen Reynolds
+	 */
+	private List<String> getLinks(String html) {
+		List<String> links = new LinkedList<String>();
+		String regex = "\\(?\\b(http://|www[.])[-A-Za-z0-9+&amp;@#/%?=~_()|!:,.;]*[-A-Za-z0-9+&amp;@#/%=~_()|]";
+		Pattern pattern = Pattern.compile(regex);
+		Matcher matcher = pattern.matcher(html);
+		
+		while (matcher.find()) {
+			String linkUrl = matcher.group();
+			if (linkUrl.startsWith("(") && linkUrl.endsWith(")")) {
+				linkUrl = linkUrl.substring(1, linkUrl.length() - 1);
+			}
+			links.add(linkUrl);
+		}
+		
+		return links;
 	}
 }
