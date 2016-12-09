@@ -26,6 +26,9 @@ public class WebTreeNode {
     * Child nodes
     */
    ArrayList< WebTreeNode > children           = new ArrayList< WebTreeNode >( );
+   
+   WebTreeNode left;
+   WebTreeNode right;
 
    /**
     * Add a child node
