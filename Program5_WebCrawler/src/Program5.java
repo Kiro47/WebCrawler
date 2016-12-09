@@ -2,8 +2,9 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -30,7 +31,7 @@ public class Program5 extends AbstractWebCrawler{
 				"docs.aws.amazon.com",
 				"dougengelbart.org",
 				"theme.tumblr.com",
-				"red bull.com",
+				"redbull.com",
 				"maa.org",
 				"teardropshop.com",
 				"golittleguy.com",
@@ -90,10 +91,6 @@ public class Program5 extends AbstractWebCrawler{
 
 		// Try, because invalid URLs happen.
 		try {
-			// Check that domain begins with http://
-			if (domain.substring(0, 6) != "http://") {
-				domain = "http://" + domain;
-			}
 			url = new URL(domain);
 		} 
 		catch (MalformedURLException e) {
@@ -137,6 +134,7 @@ public class Program5 extends AbstractWebCrawler{
 	 */
 	@Override
 	public void preorderTraversalPrint(WebTreeNode root) {
+		// Probably not what we want.
 		print(root);
 		for (WebTreeNode n : root.children) {
 			print(n);
@@ -194,12 +192,57 @@ public class Program5 extends AbstractWebCrawler{
 	 */
 	@Override
 	public WebTreeNode crawlWeb(String domain, int port, String page, String... searchTerms) {
-//		String html = getWebPage(domain, port, page);
-//		for (String s : getLinks(html)) {
-//			System.out.println(s);
-//		}
+		WebTreeNode root = new WebTreeNode(domain, port, page, searchTerms);
+		Set<String> visited = new HashSet<String>();
 		
-		return null;
+		// Crawl until results limit is reached.
+		while (visited.size() < resultsLimit) {
+			// Ensure domain has http protocol.
+			if (domain.substring(0, 6) != "http://" || domain.substring(0, 6) != "https://") {
+				domain = "http://" + domain;
+			}
+			
+			String webContent = getWebPage(domain, port, page);
+			List<String> links = getLinks(webContent);
+			
+			// Add links to parent node.
+			for (String s : links) {
+				WebTreeNode current = new WebTreeNode(getDomain(s), port, getPage(s), searchTerms);
+				
+				if (!blacklist.contains(current.domain)) {
+					root.add(current);
+				}
+			}
+		}
+		
+		return root;
+	}
+	
+	/**
+	 * Returns the domain of a url
+	 * @param url
+	 * @return String
+	 * @author Stephen Reynolds
+	 */
+	private String getDomain(String url) {
+		URI uri = null;
+		try {
+			uri = new URI(url);
+		} catch (URISyntaxException e) {
+			e.printStackTrace();
+		}
+		return uri.getHost();
+	}
+	
+	/**
+	 * Returns the page of a url
+	 * @param url
+	 * @return String
+	 * @author Stephen Reynolds
+	 */
+	private String getPage(String url) {
+		String domain = getDomain(url);
+		return url.replace(domain, "");
 	}
 	
 	/**
