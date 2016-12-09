@@ -5,9 +5,10 @@ import java.net.MalformedURLException;
 import java.net.URL;
 
 /**
+ * Program 5: Web Crawler
+ * @author Brandon Paupore, Eli Hovis, James Helm, Stephen Reynolds
+ * Last modified: 2016-12-09
  * 
- * @author 
- *
  */
 
 public class Program5 extends AbstractWebCrawler{
@@ -99,8 +100,15 @@ public class Program5 extends AbstractWebCrawler{
   */
 	@Override
 	public void preorderTraversalPrint(WebTreeNode root) {
-		// TODO Auto-generated method stub
-
+		if (root != null) {
+			System.out.printf(
+					"%s \t http://%s%s\n",
+					root.matchedSearchTerms, 
+					root.domain, 
+					root.page);
+			preorderTraversalPrint(root.left);
+			preorderTraversalPrint(root.right);
+		}
 	}
 
 	/**
