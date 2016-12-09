@@ -21,11 +21,20 @@ import java.util.regex.Pattern;
 
 public class Program5 extends AbstractWebCrawler{
 
+	/**
+	 * Constructor
+	 * @param resultsLimit
+	 * @param blacklist
+	 */
 	public Program5( int resultsLimit, String ... blacklist ) {
 		// Variables here don't need to be redeclared, just passed on.
 		super(resultsLimit, blacklist);
 	}
 
+	/**
+	 * Test method
+	 * @param args
+	 */
 	public static void main(String[] args) {
 		String [ ] blacklist = new String [ ] { 
 				"docs.aws.amazon.com",
@@ -189,6 +198,7 @@ public class Program5 extends AbstractWebCrawler{
 	 *
 	 * @returns The tree rooted at the specified start page and containing
 	 * only pages that contain one or more of the search terms.
+	 * @author Stephen Reynolds
 	 */
 	@Override
 	public WebTreeNode crawlWeb(String domain, int port, String page, String... searchTerms) {
