@@ -8,24 +8,24 @@ public class WebTreeNode {
    /**
     * Domain and port of web server
     */
-   String                   domain             = null;
-   int                      port               = 80;
+   String domain = null;
+   int port = 80;
    /**
     * Web Page
     */
-   String                   page               = null;
+   String page = null;
    /**
     * Search terms searched for on page
     */
-   String [ ]               searchTerms        = null;
+   String [ ] searchTerms = null;
    /**
     * Search terms that matched
     */
-   ArrayList< String >      matchedSearchTerms = new ArrayList< String >( );
+   ArrayList< String > matchedSearchTerms = new ArrayList< String >( );
    /**
     * Child nodes
     */
-   ArrayList< WebTreeNode > children           = new ArrayList< WebTreeNode >( );
+   ArrayList< WebTreeNode > children = new ArrayList< WebTreeNode >( );
 
    /**
     * Add a child node
@@ -53,7 +53,7 @@ public class WebTreeNode {
 
    /**
     * Constructor for WebTreeNode
-    * 
+    *
     * @param domain
     * @param port
     * @param page

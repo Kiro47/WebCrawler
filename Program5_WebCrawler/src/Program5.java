@@ -15,17 +15,17 @@ import java.util.regex.Pattern;
 
 /**
  * Program 5: Web Crawler
- * 
+ *
  * @author Brandon Paupore, Eli Hovis, James Helm, Stephen Reynolds Last
  *         modified: 2016-12-09
- * 
+ *
  */
 
 public class Program5 extends AbstractWebCrawler {
 
 	/**
 	 * Constructor
-	 * 
+	 *
 	 * @param resultsLimit
 	 * @param blacklist
 	 */
@@ -36,7 +36,7 @@ public class Program5 extends AbstractWebCrawler {
 
 	/**
 	 * Test method
-	 * 
+	 *
 	 * @param args
 	 */
 	public static void main(String[] args) {
@@ -142,7 +142,7 @@ public class Program5 extends AbstractWebCrawler {
 	/**
 	 * Prints a node using format: "%s \t http://%s%s\n", matchedSearchTerms,
 	 * domain, page
-	 * 
+	 *
 	 * @param node
 	 *            to print
 	 * @author Stephen Reynolds
@@ -204,15 +204,15 @@ public class Program5 extends AbstractWebCrawler {
 				}
 
 				String webContent = getWebPage(domain, port, page);
-				List<String> links = getLinks(webContent);
-
+				List<String> links = getLinks(webContent); //isn't getting links
+				System.out.println(links.size()); //always 0
 				// Add links to parent node.
-				for (String s : links) {
-					WebTreeNode current = new WebTreeNode(getDomain(s), port, getPage(s), searchTerms);
-
-					if (!blacklist.contains(current.domain)) {
-						root.add(current);
-					}
+				for (String s : links) { //This isn't executing, because links.size == 0
+				  WebTreeNode current = new WebTreeNode(getDomain(s), port, getPage(s), searchTerms);
+				  if (!blacklist.contains(current.domain)) {
+				    if (visited.add(current.domain)) //checks if already visited
+				      root.add(current);
+				  }
 				}
 			}
 		}
@@ -221,7 +221,7 @@ public class Program5 extends AbstractWebCrawler {
 
 	/**
 	 * Returns the domain of a url
-	 * 
+	 *
 	 * @param url
 	 * @return String
 	 * @author Stephen Reynolds
@@ -238,7 +238,7 @@ public class Program5 extends AbstractWebCrawler {
 
 	/**
 	 * Returns the page of a url
-	 * 
+	 *
 	 * @param url
 	 * @return String
 	 * @author Stephen Reynolds
@@ -258,7 +258,7 @@ public class Program5 extends AbstractWebCrawler {
 
 	/**
 	 * Return a list of urls for each link in a given web page.
-	 * 
+	 *
 	 * @param html
 	 *            search for links here
 	 * @return list of urls
