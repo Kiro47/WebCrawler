@@ -46,11 +46,10 @@ public class Program5 extends AbstractWebCrawler {
 				"jobs.gamasutra.com", "darkreading.com", "www.gdcvault.com", "gamecareerguide.com", "aoir.org",
 				"capterra.com", "www.google.com", "academyart.edu", "bing.com" };
 		Program5 prog = new Program5(25, blacklist);
-		// prog.crawlWeb( "www.cs.rhodes.edu", 80, "/~kirlinp/courses/cs1/f15/",
-		// "game", "animation", "java", "loop" );
+		//prog.crawlWeb( "www.cs.rhodes.edu", 80, "/~kirlinp/courses/cs1/f15/",
+ 		//		"game", "animation", "java", "loop" );
 		// prog.crawlWeb( "planet.lisp.org", 80, "/", "car", "cdr" );
-		// prog.crawlWeb( "www.gamasutra.com", 80, "/", "multiplayer", "game
-		// design", "patterns" );
+		// prog.crawlWeb( "www.gamasutra.com", 80, "/", "multiplayer", "game design", "patterns" );
 		prog.crawlWeb("citeseerx.ist.psu.edu", 80, "/search?q=Game+Design", "multiplayer", "game design", "patterns");
 	}
 
@@ -185,7 +184,7 @@ public class Program5 extends AbstractWebCrawler {
 	 *
 	 * @returns The tree rooted at the specified start page and containing only
 	 *          pages that contain one or more of the search terms.
-	 * @author Stephen Reynolds, James Helm
+	 * @author Stephen Reynolds, James Helm, Brandon Paupore
 	 */
 	@Override
 	public WebTreeNode crawlWeb(String domain, int port, String page, String... searchTerms) {
@@ -202,18 +201,21 @@ public class Program5 extends AbstractWebCrawler {
 					domain = "http://" + domain;
 
 				}
-
+				//This always checks the same first page for links i.e find 20 links
+				// on first page, add those links to children, get same 20 links, repeat
 				String webContent = getWebPage(domain, port, page);
-				List<String> links = getLinks(webContent); //isn't getting links
-				System.out.println(links.size()); //always 0
+				List<String> links = getLinks(webContent);
+				for (int i = 0; i < links.size(); i++)
+					System.out.println(links.get(i));
+				System.out.println(links.size());
 				// Add links to parent node.
-				for (String s : links) { //This isn't executing, because links.size == 0
-				  WebTreeNode current = new WebTreeNode(getDomain(s), port, getPage(s), searchTerms);
-				  if (!blacklist.contains(current.domain)) {
+				for (String s : links) {
+					WebTreeNode current = new WebTreeNode(getDomain(s), port, getPage(s), searchTerms);
+					if (!blacklist.contains(current.domain))
 				    if (visited.add(current.domain)) //checks if already visited
-				      root.add(current);
-				  }
+						  root.add(current);
 				}
+
 			}
 		}
 		return root;
