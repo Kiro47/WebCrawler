@@ -44,9 +44,9 @@ public class Program5 extends AbstractWebCrawler {
 	 * main
 	 *
 	 * @param args Standard VM arguments being passed down.
-	 * 
+	 *
 	 * Standard main method to begin any normal program.
-	 * 
+	 *
 	 * @author James Helm, Stephen Reynolds, Brandon Paupore
 	 */
 	public static void main(String[] args) {
@@ -55,7 +55,7 @@ public class Program5 extends AbstractWebCrawler {
 				"icptrack.com", "adtechus.com", "vrdconf.com", "gdceurope.com", "gdconf.com", "webscribble.com",
 				"jobs.gamasutra.com", "darkreading.com", "www.gdcvault.com", "gamecareerguide.com", "aoir.org",
 				"capterra.com", "www.google.com", "academyart.edu", "bing.com" };
-		
+
 		Program5 prog = new Program5(25, blacklist);
 		//prog.crawlWeb( "www.cs.rhodes.edu", 80, "/~kirlinp/courses/cs1/f15/",
  		//		"game", "animation", "java", "loop" );
@@ -64,7 +64,7 @@ public class Program5 extends AbstractWebCrawler {
 		prog.crawlWeb("citeseerx.ist.psu.edu", 80, "/search?q=Game+Design", "multiplayer", "game design", "patterns");
 	}
 
-	
+
 	/**
 	 * Returns the content of the specified web page.
 	 *
@@ -76,18 +76,19 @@ public class Program5 extends AbstractWebCrawler {
 	 *            - the page to be loaded from the web server. ex:
 	 *            research/about/areas/
 	 * @return - a String containing the content of the web page.
-	 * 
+	 *
 	 * @author James Helm
 	 */
 	@Override
 	protected String getWebPage(String domain, int port, String page) {
+		if (page.startsWith("http"))
+			page = page.substring(4, page.length());
 		domain += page;
 		String web = "";
 		String input = "";
 
 		URL url = null;
 		BufferedReader reader = null;
-
 		// Try, because invalid URLs happen.
 		try {
 			url = new URL(domain);
@@ -97,9 +98,10 @@ public class Program5 extends AbstractWebCrawler {
 
 		// Make sure to stop if the URL is invalid.
 		if (url != null) {
-
 			try {
 				// Begin reading the web page.
+
+				// Weird error where host name ends in http so can't open stream
 				reader = new BufferedReader(new InputStreamReader(url.openStream()));
 
 				// input is equal to the next line, and continues until it's
@@ -204,29 +206,69 @@ public class Program5 extends AbstractWebCrawler {
 					domain = "http://" + domain;
 
 				}
-				//This always checks the same first page for links i.e find 20 links
-				// on first page, add those links to children, get same 20 links, repeat
+
 				String webContent = getWebPage(domain, port, page);
 				List<String> links = getLinks(webContent);
-				
-				for (int i = 0; i < links.size(); i++)
-					System.out.println(links.get(i));
-				
-				System.out.println(links.size());
-				
+
+			//	for (int i = 0; i < links.size(); i++)
+			//		System.out.println(links.get(i));
+
+		//		System.out.println(links.size());
+
 				// Add links to parent node.
 				for (String s : links) {
 					WebTreeNode current = new WebTreeNode(getDomain(s), port, getPage(s), searchTerms);
-					
+
 					if (!blacklist.contains(current.domain))
-				    if (visited.add(current.domain)) //checks if already visited
+				    if (visited.add(current.domain + current.page)) //checks if already visited
 						  root.add(current);
 				}
-
+				for (WebTreeNode wtn : root.children) {
+					if (visited.size() < resultsLimit)
+						crawlWeb(wtn, visited, searchTerms); //Crawls web over root's children
+				}
 			}
 		}
 		return root;
 	}
+	/**
+	 * Crawl the web looking for pages containing the specified search terms.
+	 * @param WebTreeNode node to search for links in
+	 * @param Set<String> pages visited
+	 * @param searchTerms
+	 * @author Brandon Paupore
+	 */
+	public void crawlWeb(WebTreeNode root,Set<String> visited, String... searchTerms) {
+	// Crawl until results limit is reached.
+		while (visited.size() < resultsLimit) {
+			// Ensure domain has http protocol.
+			if (root.domain != null && !root.domain.isEmpty()) {
+
+				if (!root.domain.startsWith("http://") && !root.domain.startsWith("https://")) {
+
+					root.domain = "http://" + root.domain;
+
+				}
+
+				String webContent = getWebPage(root.domain, root.port, root.page);
+				List<String> links = getLinks(webContent);
+
+				// Add links to parent node.
+				for (String s : links) {
+					WebTreeNode current = new WebTreeNode(getDomain(s), root.port, getPage(s), searchTerms);
+
+					if (!blacklist.contains(current.domain))
+						if (visited.add(current.domain + current.page)) //checks if already visited
+							root.add(current);
+				}
+				for (WebTreeNode wtn : root.children) {
+					if (visited.size() < resultsLimit)
+						crawlWeb(wtn, visited, searchTerms);
+				}
+			}
+		}
+	}
+
 
 	/**
 	 * Returns the domain of a url
@@ -284,7 +326,7 @@ public class Program5 extends AbstractWebCrawler {
 			if (linkUrl.startsWith("(") && linkUrl.endsWith(")")) {
 				linkUrl = linkUrl.substring(1, linkUrl.length() - 1);
 			}
-			
+
 			// If the linkUrl extension isn't blacklisted add it.
 						if (!blacklistedExtensions.contains(linkUrl.substring(linkUrl.length() - linkUrl.lastIndexOf('.')))) {
 							links.add(linkUrl);
@@ -293,5 +335,5 @@ public class Program5 extends AbstractWebCrawler {
 
 		return links;
 	}
-	
+
 }
