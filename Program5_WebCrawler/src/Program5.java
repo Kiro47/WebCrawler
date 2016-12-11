@@ -6,6 +6,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.UnknownHostException;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -24,6 +25,11 @@ import java.util.regex.Pattern;
 public class Program5 extends AbstractWebCrawler {
 
 	/**
+	 *  Used for blacklisted file extensions that should be ignored.
+	 */
+	protected List<String> blacklistedExtensions = Arrays.asList(".dtd", ".exe" , ".png" + ".jpg" + ".gif" + ".mp3" + ".mpg" + ".mp4" + ".mov" + ".mkv");
+
+	/**
 	 * Constructor
 	 *
 	 * @param resultsLimit
@@ -35,9 +41,13 @@ public class Program5 extends AbstractWebCrawler {
 	}
 
 	/**
-	 * Test method
+	 * main
 	 *
-	 * @param args
+	 * @param args Standard VM arguments being passed down.
+	 * 
+	 * Standard main method to begin any normal program.
+	 * 
+	 * @author James Helm, Stephen Reynolds, Brandon Paupore
 	 */
 	public static void main(String[] args) {
 		String[] blacklist = new String[] { "docs.aws.amazon.com", "dougengelbart.org", "theme.tumblr.com",
@@ -45,6 +55,7 @@ public class Program5 extends AbstractWebCrawler {
 				"icptrack.com", "adtechus.com", "vrdconf.com", "gdceurope.com", "gdconf.com", "webscribble.com",
 				"jobs.gamasutra.com", "darkreading.com", "www.gdcvault.com", "gamecareerguide.com", "aoir.org",
 				"capterra.com", "www.google.com", "academyart.edu", "bing.com" };
+		
 		Program5 prog = new Program5(25, blacklist);
 		//prog.crawlWeb( "www.cs.rhodes.edu", 80, "/~kirlinp/courses/cs1/f15/",
  		//		"game", "animation", "java", "loop" );
@@ -53,18 +64,9 @@ public class Program5 extends AbstractWebCrawler {
 		prog.crawlWeb("citeseerx.ist.psu.edu", 80, "/search?q=Game+Design", "multiplayer", "game design", "patterns");
 	}
 
+	
 	/**
 	 * Returns the content of the specified web page.
-	 *
-	 * To do this, open a socket for the specified domain and port. Then send
-	 * the following commands:
-	 *
-	 * "GET " + page + " HTTP/1.0\r\n" "HOST: " + domain + "\r\n" "CONNECTION:
-	 * close\r\n" "\r\n"
-	 *
-	 * Don't forget to flush the output stream.
-	 *
-	 * Then read and return the incoming data from the socket.
 	 *
 	 * @param domain
 	 *            - the domain of the web server. Ex: www.mtu.edu
@@ -74,6 +76,7 @@ public class Program5 extends AbstractWebCrawler {
 	 *            - the page to be loaded from the web server. ex:
 	 *            research/about/areas/
 	 * @return - a String containing the content of the web page.
+	 * 
 	 * @author James Helm
 	 */
 	@Override
@@ -205,12 +208,16 @@ public class Program5 extends AbstractWebCrawler {
 				// on first page, add those links to children, get same 20 links, repeat
 				String webContent = getWebPage(domain, port, page);
 				List<String> links = getLinks(webContent);
+				
 				for (int i = 0; i < links.size(); i++)
 					System.out.println(links.get(i));
+				
 				System.out.println(links.size());
+				
 				// Add links to parent node.
 				for (String s : links) {
 					WebTreeNode current = new WebTreeNode(getDomain(s), port, getPage(s), searchTerms);
+					
 					if (!blacklist.contains(current.domain))
 				    if (visited.add(current.domain)) //checks if already visited
 						  root.add(current);
@@ -264,7 +271,7 @@ public class Program5 extends AbstractWebCrawler {
 	 * @param html
 	 *            search for links here
 	 * @return list of urls
-	 * @author Stephen Reynolds
+	 * @author Stephen Reynolds, James Helm
 	 */
 	private List<String> getLinks(String html) {
 		List<String> links = new LinkedList<String>();
@@ -277,9 +284,14 @@ public class Program5 extends AbstractWebCrawler {
 			if (linkUrl.startsWith("(") && linkUrl.endsWith(")")) {
 				linkUrl = linkUrl.substring(1, linkUrl.length() - 1);
 			}
-			links.add(linkUrl);
+			
+			// If the linkUrl extension isn't blacklisted add it.
+						if (!blacklistedExtensions.contains(linkUrl.substring(linkUrl.length() - linkUrl.lastIndexOf('.')))) {
+							links.add(linkUrl);
+						}
 		}
 
 		return links;
 	}
+	
 }
