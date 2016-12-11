@@ -56,12 +56,12 @@ public class Program5 extends AbstractWebCrawler {
 				"jobs.gamasutra.com", "darkreading.com", "www.gdcvault.com", "gamecareerguide.com", "aoir.org",
 				"capterra.com", "www.google.com", "academyart.edu", "bing.com" };
 
-		Program5 prog = new Program5(25, blacklist);
-		//prog.crawlWeb( "www.cs.rhodes.edu", 80, "/~kirlinp/courses/cs1/f15/",
- 		//		"game", "animation", "java", "loop" );
-		// prog.crawlWeb( "planet.lisp.org", 80, "/", "car", "cdr" );
-		// prog.crawlWeb( "www.gamasutra.com", 80, "/", "multiplayer", "game design", "patterns" );
-		prog.crawlWeb("citeseerx.ist.psu.edu", 80, "/search?q=Game+Design", "multiplayer", "game design", "patterns");
+		Program5 prog = new Program5(40, blacklist);
+		 // prog.crawlWeb( "www.cs.rhodes.edu", 80, "/~kirlinp/courses/cs1/f15/",
+ 		 //		"game", "animation", "java", "loop" );
+		 // prog.crawlWeb( "planet.lisp.org", 80, "/", "car", "cdr" );
+	    prog.crawlWeb( "www.gamasutra.com", 80, "/", "multiplayer", "game design", "patterns" );
+		//  prog.crawlWeb("citeseerx.ist.psu.edu", 80, "/search?q=Game+Design", "multiplayer", "game design", "patterns"); //FYI This link has a daily limit to access
 	}
 
 
@@ -81,8 +81,6 @@ public class Program5 extends AbstractWebCrawler {
 	 */
 	@Override
 	protected String getWebPage(String domain, int port, String page) {
-		if (page.startsWith("http"))
-			page = page.substring(4, page.length());
 		domain += page;
 		String web = "";
 		String input = "";
@@ -206,22 +204,14 @@ public class Program5 extends AbstractWebCrawler {
 					domain = "http://" + domain;
 
 				}
-
 				String webContent = getWebPage(domain, port, page);
-				List<String> links = getLinks(webContent);
-
-			//	for (int i = 0; i < links.size(); i++)
-			//		System.out.println(links.get(i));
-
-		//		System.out.println(links.size());
-
+				List<String> links = getLinks(webContent, searchTerms);
 				// Add links to parent node.
 				for (String s : links) {
 					WebTreeNode current = new WebTreeNode(getDomain(s), port, getPage(s), searchTerms);
-
-					if (!blacklist.contains(current.domain))
-				    if (visited.add(current.domain + current.page)) //checks if already visited
-						  root.add(current);
+						if (!blacklist.contains(current.domain))
+				    	if (visited.add(current.domain + current.page)) //checks if already visited
+						  	root.add(current);
 				}
 				for (WebTreeNode wtn : root.children) {
 					if (visited.size() < resultsLimit)
@@ -229,6 +219,7 @@ public class Program5 extends AbstractWebCrawler {
 				}
 			}
 		}
+		preorderTraversalPrint(root);
 		return root;
 	}
 	/**
@@ -251,15 +242,15 @@ public class Program5 extends AbstractWebCrawler {
 				}
 
 				String webContent = getWebPage(root.domain, root.port, root.page);
-				List<String> links = getLinks(webContent);
+				List<String> links = getLinks(webContent, searchTerms);
 
 				// Add links to parent node.
 				for (String s : links) {
+					System.out.println(s);
 					WebTreeNode current = new WebTreeNode(getDomain(s), root.port, getPage(s), searchTerms);
-
-					if (!blacklist.contains(current.domain))
-						if (visited.add(current.domain + current.page)) //checks if already visited
-							root.add(current);
+						if (!blacklist.contains(current.domain))
+							if (visited.add(current.domain + current.page)) //checks if already visited
+								root.add(current);
 				}
 				for (WebTreeNode wtn : root.children) {
 					if (visited.size() < resultsLimit)
@@ -292,7 +283,7 @@ public class Program5 extends AbstractWebCrawler {
 	 *
 	 * @param url
 	 * @return String
-	 * @author Stephen Reynolds
+	 * @author Stephen Reynolds, Brandon Paupore
 	 */
 	private String getPage(String url) {
 		String domain = getDomain(url);
@@ -302,7 +293,7 @@ public class Program5 extends AbstractWebCrawler {
 		}
 		// If it's a home page it would return
 		else {
-			url = url.replace(domain, "");
+			url = url.replace("http://" + domain, "");
 		}
 		return url;
 	}
@@ -315,25 +306,33 @@ public class Program5 extends AbstractWebCrawler {
 	 * @return list of urls
 	 * @author Stephen Reynolds, James Helm
 	 */
-	private List<String> getLinks(String html) {
-		List<String> links = new LinkedList<String>();
-		String regex = "\\(?\\b(http://|www[.])[-A-Za-z0-9+&amp;@#/%?=~_()|!:,.;]*[-A-Za-z0-9+&amp;@#/%=~_()|]";
-		Pattern pattern = Pattern.compile(regex);
-		Matcher matcher = pattern.matcher(html);
-
-		while (matcher.find()) {
-			String linkUrl = matcher.group();
-			if (linkUrl.startsWith("(") && linkUrl.endsWith(")")) {
-				linkUrl = linkUrl.substring(1, linkUrl.length() - 1);
+	private List<String> getLinks(String html, String... searchTerms) {
+		boolean hasTerms = false;
+		//Tests if page has search terms within
+		for (String s : searchTerms)
+			if (html.contains(s)) {
+				hasTerms = true;
+				break;
 			}
+		List<String> links = new LinkedList<String>();
+		if (hasTerms) {
+			String regex = "\\(?\\b(http://|www[.])[-A-Za-z0-9+&amp;@#/%?=~_()|!:,.;]*[-A-Za-z0-9+&amp;@#/%=~_()|]";
+			Pattern pattern = Pattern.compile(regex);
+			Matcher matcher = pattern.matcher(html);
 
-			// If the linkUrl extension isn't blacklisted add it.
-						if (!blacklistedExtensions.contains(linkUrl.substring(linkUrl.length() - linkUrl.lastIndexOf('.')))) {
-							links.add(linkUrl);
-						}
+			while (matcher.find()) {
+				String linkUrl = matcher.group();
+				if (linkUrl.startsWith("(") && linkUrl.endsWith(")")) {
+					linkUrl = linkUrl.substring(1, linkUrl.length() - 1);
+				}
+				//doesn't work currently, all file types being pursued
+				if (linkUrl.contains("."))
+					if (!blacklistedExtensions.contains(linkUrl.substring(linkUrl.length() - linkUrl.lastIndexOf('.'))))
+						links.add(linkUrl);
+				else
+					links.add(linkUrl);
+			}
 		}
-
 		return links;
 	}
-
 }
