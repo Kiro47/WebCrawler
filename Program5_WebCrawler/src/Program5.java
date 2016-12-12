@@ -106,7 +106,7 @@ public class Program5 extends AbstractWebCrawler {
 		if (url != null) {
 			try {
 				// Begin reading the web page.
-
+				//
 				// Weird error where host name ends in http so can't open stream
 				reader = new BufferedReader(new InputStreamReader(url.openStream()));
 
