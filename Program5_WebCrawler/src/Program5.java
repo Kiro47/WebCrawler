@@ -29,7 +29,7 @@ public class Program5 extends AbstractWebCrawler {
 	/**
 	 *  Used for blacklisted file extensions that should be ignored.
 	 */
-	protected List<String> blacklistedExtensions = Arrays.asList(".dtd", ".exe" , ".png" + ".jpg" + ".gif" + ".mp3" + ".mpg" + ".mp4" + ".mov" + ".mkv");
+	protected List<String> blacklistedExtensions = Arrays.asList(".dtd", ".exe" , ".png" , ".jpg" , ".gif" , ".mp3" , ".mpg" , ".mp4" , ".mov" , ".mkv");
 
 	/**
 	 * Constructor
@@ -269,6 +269,7 @@ public class Program5 extends AbstractWebCrawler {
 						if (!blacklist.contains(current.domain))
 							if (visited.add(current.domain + current.page)) //checks if already visited
 								root.add(current);
+						
 				}
 				for (WebTreeNode wtn : root.children) {
 					if (visited.size() < resultsLimit)
@@ -346,11 +347,20 @@ public class Program5 extends AbstractWebCrawler {
 				
 				// If the linkURL extension isn't blacklisted add it.
 				// Accounts for one and two letter extensions as well.
-				System.out.println(linkUrl);
 				if (linkUrl.contains(".")) {
-	            if (!blacklistedExtensions.contains(linkUrl.substring(linkUrl.lastIndexOf('.')))) {
-	            	links.add(linkUrl);
-	            }
+					boolean ignore = false;
+				for(String s : blacklistedExtensions) {
+					if (s.equalsIgnoreCase(linkUrl.substring(linkUrl.lastIndexOf('.')))) {
+						ignore = true;
+						break;
+					}
+					
+				}
+				// If it contains a blacklist extensions then don't add it.
+				if (!ignore) {
+					links.add(linkUrl);
+				}
+				
 			  }
 			}
 		}
