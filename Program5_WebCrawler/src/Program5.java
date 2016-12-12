@@ -95,7 +95,7 @@ public class Program5 extends AbstractWebCrawler {
 
 		URL url = null;
 		BufferedReader reader = null;
-		// Try, because invalid URLs happen.
+		// Try, because invalid URLs happen
 		try {
 			url = new URL(domain);
 		} catch (MalformedURLException e) {
@@ -169,7 +169,7 @@ public class Program5 extends AbstractWebCrawler {
 	 * results has reached the results limit.
 	 *
 	 * Don't bother searching pages of the following binary file types: exe,
-	 * png, jpg, gif, mp3, mpg, mp4, mov
+	 * png, jpg, gif, mp3over, mpg, mp4, mov
 	 *
 	 * After the search is complete, print the following statistics:
 	 *
