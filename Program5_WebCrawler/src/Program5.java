@@ -23,7 +23,9 @@ import java.util.regex.Pattern;
  */
 
 public class Program5 extends AbstractWebCrawler {
-
+	
+	WebTreeNode root = null;
+	
 	/**
 	 *  Used for blacklisted file extensions that should be ignored.
 	 */
@@ -62,6 +64,8 @@ public class Program5 extends AbstractWebCrawler {
 		 // prog.crawlWeb( "planet.lisp.org", 80, "/", "car", "cdr" );
 	    prog.crawlWeb( "www.gamasutra.com", 80, "/", "multiplayer", "game design", "patterns" );
 		//  prog.crawlWeb("citeseerx.ist.psu.edu", 80, "/search?q=Game+Design", "multiplayer", "game design", "patterns"); //FYI This link has a daily limit to access
+	    
+	    prog.preorderTraversalPrint(prog.root);
 	}
 
 
@@ -81,6 +85,13 @@ public class Program5 extends AbstractWebCrawler {
 	 */
 	@Override
 	protected String getWebPage(String domain, int port, String page) {
+		// Handles empty page addition errors.
+		
+		if (page.startsWith("http://")) {
+			page = page.substring(4, page.length());
+		}
+		
+		// Combine to form true URL.
 		domain += page;
 		String web = "";
 		String input = "";
@@ -99,7 +110,10 @@ public class Program5 extends AbstractWebCrawler {
 			try {
 				// Begin reading the web page.
 
-				// Weird error where host name ends in http so can't open stream
+				/* Weird error where host name ends in http so can't open stream
+				 * Likely caused by an empty page, where anchors are used a 
+				 * a self reference to a page using #
+				 */
 				reader = new BufferedReader(new InputStreamReader(url.openStream()));
 
 				// input is equal to the next line, and continues until it's
@@ -130,14 +144,18 @@ public class Program5 extends AbstractWebCrawler {
 	 *
 	 * @param root
 	 *            - print the subtree rooted at this node
-	 * @author Stephen Reynolds
+	 * @author Stephen Reynolds , James Helm
 	 */
 	@Override
 	public void preorderTraversalPrint(WebTreeNode root) {
-		// Probably not what we want.
-		print(root);
-		for (WebTreeNode n : root.children) {
-			print(n);
+
+		// A very rare occasion that I'll justify recursion.
+		
+		if (root != null) {
+			print(root);
+			for (WebTreeNode node : root.children) {
+				preorderTraversalPrint(node);
+			}
 		}
 	}
 
@@ -150,7 +168,7 @@ public class Program5 extends AbstractWebCrawler {
 	 * @author Stephen Reynolds
 	 */
 	private void print(WebTreeNode node) {
-		System.out.printf("%s \t http://%s%s\n", node.matchedSearchTerms, node.domain, node.page);
+		System.out.printf("%s \t http://%s%s\n", node.matchedSearchTerms, node.domain, node.page.replace("http://", ""));
 	}
 
 	/**
@@ -191,7 +209,7 @@ public class Program5 extends AbstractWebCrawler {
 	 */
 	@Override
 	public WebTreeNode crawlWeb(String domain, int port, String page, String... searchTerms) {
-		WebTreeNode root = new WebTreeNode(domain, port, page, searchTerms);
+		  this.root = new WebTreeNode(domain, port, page, searchTerms);
 		Set<String> visited = new HashSet<String>();
 
 		// Crawl until results limit is reached.
@@ -206,10 +224,12 @@ public class Program5 extends AbstractWebCrawler {
 				}
 				String webContent = getWebPage(domain, port, page);
 				List<String> links = getLinks(webContent, searchTerms);
+				
 				// Add links to parent node.
 				for (String s : links) {
 					WebTreeNode current = new WebTreeNode(getDomain(s), port, getPage(s), searchTerms);
 						if (!blacklist.contains(current.domain))
+							
 				    	if (visited.add(current.domain + current.page)) //checks if already visited
 						  	root.add(current);
 				}
@@ -219,7 +239,6 @@ public class Program5 extends AbstractWebCrawler {
 				}
 			}
 		}
-		preorderTraversalPrint(root);
 		return root;
 	}
 	/**
@@ -246,7 +265,6 @@ public class Program5 extends AbstractWebCrawler {
 
 				// Add links to parent node.
 				for (String s : links) {
-					System.out.println(s);
 					WebTreeNode current = new WebTreeNode(getDomain(s), root.port, getPage(s), searchTerms);
 						if (!blacklist.contains(current.domain))
 							if (visited.add(current.domain + current.page)) //checks if already visited
@@ -325,12 +343,15 @@ public class Program5 extends AbstractWebCrawler {
 				if (linkUrl.startsWith("(") && linkUrl.endsWith(")")) {
 					linkUrl = linkUrl.substring(1, linkUrl.length() - 1);
 				}
-				//doesn't work currently, all file types being pursued
-				if (linkUrl.contains("."))
-					if (!blacklistedExtensions.contains(linkUrl.substring(linkUrl.length() - linkUrl.lastIndexOf('.'))))
-						links.add(linkUrl);
-				else
-					links.add(linkUrl);
+				
+				// If the linkURL extension isn't blacklisted add it.
+				// Accounts for one and two letter extensions as well.
+				System.out.println(linkUrl);
+				if (linkUrl.contains(".")) {
+	            if (!blacklistedExtensions.contains(linkUrl.substring(linkUrl.lastIndexOf('.')))) {
+	            	links.add(linkUrl);
+	            }
+			  }
 			}
 		}
 		return links;
