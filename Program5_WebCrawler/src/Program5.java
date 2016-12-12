@@ -7,6 +7,7 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.UnknownHostException;
 import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -23,14 +24,15 @@ import java.util.regex.Pattern;
  */
 
 public class Program5 extends AbstractWebCrawler {
-	
-	WebTreeNode root = null;
-	
+
 	/**
 	 *  Used for blacklisted file extensions that should be ignored.
 	 */
-	protected List<String> blacklistedExtensions = Arrays.asList(".dtd", ".exe" , ".png" + ".jpg" + ".gif" + ".mp3" + ".mpg" + ".mp4" + ".mov" + ".mkv");
+	protected List<String> blacklistedExtensions = Arrays.asList(".dtd", ".exe", ".png", ".jpg", ".gif", ".mp3", ".mpg", ".mp4", ".mov", ".mkv");
 
+	protected int treeSize = 1;
+
+	protected	Set<String> visited = new HashSet<String>();
 	/**
 	 * Constructor
 	 *
@@ -56,16 +58,14 @@ public class Program5 extends AbstractWebCrawler {
 				"redbull.com", "maa.org", "teardropshop.com", "golittleguy.com", "abcl.org", "dieselsweeties.com",
 				"icptrack.com", "adtechus.com", "vrdconf.com", "gdceurope.com", "gdconf.com", "webscribble.com",
 				"jobs.gamasutra.com", "darkreading.com", "www.gdcvault.com", "gamecareerguide.com", "aoir.org",
-				"capterra.com", "www.google.com", "academyart.edu", "bing.com" };
+				"capterra.com", "www.google.com", "academyart.edu", "bing.com", "www.darkreading.com", "www.blackhat.com" };
 
-		Program5 prog = new Program5(40, blacklist);
+		Program5 prog = new Program5(25, blacklist);
 		 // prog.crawlWeb( "www.cs.rhodes.edu", 80, "/~kirlinp/courses/cs1/f15/",
  		 //		"game", "animation", "java", "loop" );
 		 // prog.crawlWeb( "planet.lisp.org", 80, "/", "car", "cdr" );
 	    prog.crawlWeb( "www.gamasutra.com", 80, "/", "multiplayer", "game design", "patterns" );
 		//  prog.crawlWeb("citeseerx.ist.psu.edu", 80, "/search?q=Game+Design", "multiplayer", "game design", "patterns"); //FYI This link has a daily limit to access
-	    
-	    prog.preorderTraversalPrint(prog.root);
 	}
 
 
@@ -85,14 +85,11 @@ public class Program5 extends AbstractWebCrawler {
 	 */
 	@Override
 	protected String getWebPage(String domain, int port, String page) {
-		// Handles empty page addition errors.
-		
-		if (page.startsWith("http://")) {
-			page = page.substring(4, page.length());
-		}
-		
-		// Combine to form true URL.
+		if (domain == null || domain.equals(""))
+			return null;
 		domain += page;
+		if (!domain.startsWith("http"))
+			domain = "http://" + domain;
 		String web = "";
 		String input = "";
 
@@ -110,10 +107,7 @@ public class Program5 extends AbstractWebCrawler {
 			try {
 				// Begin reading the web page.
 
-				/* Weird error where host name ends in http so can't open stream
-				 * Likely caused by an empty page, where anchors are used a 
-				 * a self reference to a page using #
-				 */
+				// Weird error where host name ends in http so can't open stream
 				reader = new BufferedReader(new InputStreamReader(url.openStream()));
 
 				// input is equal to the next line, and continues until it's
@@ -144,31 +138,20 @@ public class Program5 extends AbstractWebCrawler {
 	 *
 	 * @param root
 	 *            - print the subtree rooted at this node
-	 * @author Stephen Reynolds , James Helm
+	 * @author Stephen Reynolds, James Helm, Brandon Paupore
 	 */
 	@Override
 	public void preorderTraversalPrint(WebTreeNode root) {
+		System.out.println("Initial URL : "+ root.domain  + root.page);
+		System.out.print("Search terms : [");
+		for (int i = 0; i < root.searchTerms.length - 1; i++)
+			System.out.print(root.searchTerms[i] + ", ");
+		System.out.print(root.searchTerms[root.searchTerms.length - 1] + "]\n");
+		System.out.println("Number of pages searched : " + visited.size());
 
-		// A very rare occasion that I'll justify recursion.
-		
-		if (root != null) {
-			print(root);
-			for (WebTreeNode node : root.children) {
-				preorderTraversalPrint(node);
-			}
-		}
-	}
-
-	/**
-	 * Prints a node using format: "%s \t http://%s%s\n", matchedSearchTerms,
-	 * domain, page
-	 *
-	 * @param node
-	 *            to print
-	 * @author Stephen Reynolds
-	 */
-	private void print(WebTreeNode node) {
-		System.out.printf("%s \t http://%s%s\n", node.matchedSearchTerms, node.domain, node.page.replace("http://", ""));
+		System.out.println("URL's\n");
+		// Replaced print method with toString from abstract class
+		System.out.println("\nTREE\n" + root.toString());
 	}
 
 	/**
@@ -209,36 +192,52 @@ public class Program5 extends AbstractWebCrawler {
 	 */
 	@Override
 	public WebTreeNode crawlWeb(String domain, int port, String page, String... searchTerms) {
-		  this.root = new WebTreeNode(domain, port, page, searchTerms);
-		Set<String> visited = new HashSet<String>();
-
+		WebTreeNode root = new WebTreeNode(domain, port, page, searchTerms);
 		// Crawl until results limit is reached.
-		while (visited.size() < resultsLimit) {
+		while (treeSize < resultsLimit) {
 			// Ensure domain has http protocol.
-			if (domain != null && !domain.isEmpty()) {
+			if (root.domain != null && !root.domain.isEmpty()) {
 
-				if (!domain.startsWith("http://") && !domain.startsWith("https://")) {
+				if (!root.domain.startsWith("http://") && !root.domain.startsWith("https://")) {
 
-					domain = "http://" + domain;
+					root.domain = "http://" + root.domain;
 
 				}
+				visited.add(root.domain + root.page);
 				String webContent = getWebPage(domain, port, page);
-				List<String> links = getLinks(webContent, searchTerms);
-				
+				root.matchedSearchTerms = hasTerms(webContent, searchTerms);
+				List<String> links = getLinks(webContent);
 				// Add links to parent node.
 				for (String s : links) {
 					WebTreeNode current = new WebTreeNode(getDomain(s), port, getPage(s), searchTerms);
-						if (!blacklist.contains(current.domain))
-							
-				    	if (visited.add(current.domain + current.page)) //checks if already visited
-						  	root.add(current);
-				}
-				for (WebTreeNode wtn : root.children) {
-					if (visited.size() < resultsLimit)
-						crawlWeb(wtn, visited, searchTerms); //Crawls web over root's children
-				}
+					if (treeSize >= resultsLimit)
+						break;
+					if (current.domain != null && !current.domain.isEmpty())
+						if (!current.domain.startsWith("http://") && !current.domain.startsWith("https://"))
+							current.domain = "http://" + current.domain;
+					if (!blacklist.contains(current.domain)) {
+						if(visited.add(current.domain + current.page)) {
+							webContent = getWebPage(current.domain, current.port, current.page);
+							current.matchedSearchTerms = hasTerms(webContent, searchTerms);
+							if (current.matchedSearchTerms.size() > 0) {
+								System.out.println(1);
+						 		root.add(current);
+								treeSize++;
+							}
+						}
+					}
+					// Bad because builds tree weird hugging left side i.e. A
+				  // FGHI = children of B : JKLM  = children of F      B/  \C\D\E
+					//																					  	    F/   \G\H\I
+					//                                                 J/  \K\L\M
+					for (WebTreeNode wtn : root.children) {
+						if (treeSize < resultsLimit)
+							crawlWeb(wtn, visited, searchTerms); //Crawls web over root's children
+					}
 			}
 		}
+	}
+		preorderTraversalPrint(root);
 		return root;
 	}
 	/**
@@ -249,30 +248,39 @@ public class Program5 extends AbstractWebCrawler {
 	 * @author Brandon Paupore
 	 */
 	public void crawlWeb(WebTreeNode root,Set<String> visited, String... searchTerms) {
-	// Crawl until results limit is reached.
-		while (visited.size() < resultsLimit) {
+		// Crawl until results limit is reached.
+		while (treeSize < resultsLimit) {
 			// Ensure domain has http protocol.
-			if (root.domain != null && !root.domain.isEmpty()) {
-
-				if (!root.domain.startsWith("http://") && !root.domain.startsWith("https://")) {
-
+			if (root.domain != null && !root.domain.isEmpty())
+				if (!root.domain.startsWith("http://") && !root.domain.startsWith("https://"))
 					root.domain = "http://" + root.domain;
 
+			String webContent = getWebPage(root.domain, root.port, root.page);
+			List<String> links = getLinks(webContent);
+			// Add links to parent node.
+			for (String s : links) {
+				if (treeSize >= resultsLimit)
+					break;
+				WebTreeNode current = new WebTreeNode(getDomain(s), root.port, getPage(s), searchTerms);
+				if (current.domain != null && !current.domain.isEmpty())
+					if (!current.domain.startsWith("http://") && !current.domain.startsWith("https://"))
+						current.domain = "http://" + current.domain;
+				if (!blacklist.contains(current.domain)) {
+					if(visited.add(current.domain + current.page)) {
+					webContent = getWebPage(current.domain, current.port, current.page);
+					if (webContent != null) {
+						current.matchedSearchTerms = hasTerms(webContent, searchTerms);
+						if (current.matchedSearchTerms.size() > 0) {
+							System.out.println(1);
+							root.add(current);
+							treeSize++;
+						}
+					}
+					}
 				}
-
-				String webContent = getWebPage(root.domain, root.port, root.page);
-				List<String> links = getLinks(webContent, searchTerms);
-
-				// Add links to parent node.
-				for (String s : links) {
-					WebTreeNode current = new WebTreeNode(getDomain(s), root.port, getPage(s), searchTerms);
-						if (!blacklist.contains(current.domain))
-							if (visited.add(current.domain + current.page)) //checks if already visited
-								root.add(current);
-				}
-				for (WebTreeNode wtn : root.children) {
-					if (visited.size() < resultsLimit)
-						crawlWeb(wtn, visited, searchTerms);
+			for (WebTreeNode wtn : root.children) {
+				if (treeSize < resultsLimit)
+					crawlWeb(wtn, visited, searchTerms); //Crawls web over root's children
 				}
 			}
 		}
@@ -322,38 +330,42 @@ public class Program5 extends AbstractWebCrawler {
 	 * @param html
 	 *            search for links here
 	 * @return list of urls
-	 * @author Stephen Reynolds, James Helm
+	 * @author Stephen Reynolds, James Helm, Brandon Paupore
 	 */
-	private List<String> getLinks(String html, String... searchTerms) {
-		boolean hasTerms = false;
-		//Tests if page has search terms within
-		for (String s : searchTerms)
-			if (html.contains(s)) {
-				hasTerms = true;
-				break;
-			}
-		List<String> links = new LinkedList<String>();
-		if (hasTerms) {
-			String regex = "\\(?\\b(http://|www[.])[-A-Za-z0-9+&amp;@#/%?=~_()|!:,.;]*[-A-Za-z0-9+&amp;@#/%=~_()|]";
-			Pattern pattern = Pattern.compile(regex);
-			Matcher matcher = pattern.matcher(html);
+	private List<String> getLinks(String html) {
 
-			while (matcher.find()) {
-				String linkUrl = matcher.group();
-				if (linkUrl.startsWith("(") && linkUrl.endsWith(")")) {
-					linkUrl = linkUrl.substring(1, linkUrl.length() - 1);
-				}
-				
-				// If the linkURL extension isn't blacklisted add it.
-				// Accounts for one and two letter extensions as well.
-				System.out.println(linkUrl);
-				if (linkUrl.contains(".")) {
-	            if (!blacklistedExtensions.contains(linkUrl.substring(linkUrl.lastIndexOf('.')))) {
-	            	links.add(linkUrl);
-	            }
-			  }
+		List<String> links = new LinkedList<String>();
+		String regex = "\\(?\\b(http://|www[.])[-A-Za-z0-9+&amp;@#/%?=~_()|!:,.;]*[-A-Za-z0-9+&amp;@#/%=~_()|]";
+		Pattern pattern = Pattern.compile(regex);
+		Matcher matcher = pattern.matcher(html);
+
+		while (matcher.find()) {
+			String linkUrl = matcher.group();
+			if (linkUrl.startsWith("(") && linkUrl.endsWith(")")) {
+				linkUrl = linkUrl.substring(1, linkUrl.length() - 1);
 			}
+			// If the linkURL extension isn't blacklisted add it.
+			// Accounts for one and two letter extensions as well.
+			if (linkUrl.contains("."))
+		  	if (!blacklistedExtensions.contains(linkUrl.substring(linkUrl.lastIndexOf('.'))))
+		    	links.add(linkUrl);
+
 		}
 		return links;
+	}
+	/**
+	 * gets HashSet of searchTerms on the page
+	 * @param file to be searched
+	 * @param searchTerms terms to search for
+	 * @return HashSet terms found, empty if none found
+	 * @author Brandon Paupore
+	 */
+	private ArrayList<String> hasTerms(String html, String... searchTerms) {
+		ArrayList<String> matchedTerms = new ArrayList<String>();
+		//Tests if page has search terms within
+		for (String s : searchTerms)
+			if (html.contains(s))
+				matchedTerms.add(s);
+		return matchedTerms;
 	}
 }
