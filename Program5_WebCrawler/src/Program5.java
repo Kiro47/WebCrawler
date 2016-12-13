@@ -61,6 +61,7 @@ public class Program5 extends AbstractWebCrawler {
 			 "capterra.com", "www.google.com", "academyart.edu", "bing.com"};
 
 	 Program5 prog = new Program5(50, blacklist);
+	 
 		// prog.crawlWeb( "www.cs.rhodes.edu", 80, "/~kirlinp/courses/cs1/f15/",
 			//		"game", "animation", "java", "loop" );
 		// prog.crawlWeb( "planet.lisp.org", 80, "/", "car", "cdr" );
@@ -104,24 +105,22 @@ public class Program5 extends AbstractWebCrawler {
 
 	 // Make sure to stop if the URL is invalid.
 	 if (url != null) {
+		 // Begin reading the web page.
+		 //
+		 // Weird error where host name ends in http so can't open stream
 		 try {
-			 // Begin reading the web page.
-			 //
-			 // Weird error where host name ends in http so can't open stream
-			 reader = new BufferedReader(new InputStreamReader(url.openStream()));
+		 reader = new BufferedReader(new InputStreamReader(url.openStream()));
 
-			 // input is equal to the next line, and continues until it's
-			 // null.
-			 while ((input = reader.readLine()) != null) {
-				 web += input;
-			 }
-			 // Now null, so close the stream to stop memory leak.
-			 reader.close();
-
+		 // input is equal to the next line, and continues until it's
+		 // null.
+		 while ((input = reader.readLine()) != null) {
+			 web += input;
 		 }
-		 // Trap errors, shouldn't actually ever be hit, but you know.
-		 catch (IOException exception) {
-			 exception.printStackTrace();
+		 // Now null, so close the stream to stop memory leak.
+		 reader.close();
+		 }
+		 catch (Exception exception) {
+			 System.out.println(exception.toString());
 		 }
 
 	 }
@@ -220,7 +219,7 @@ public class Program5 extends AbstractWebCrawler {
 						 webContent = getWebPage(current.domain, current.port, current.page);
 						 current.matchedSearchTerms = hasTerms(webContent, searchTerms);
 						 if (current.matchedSearchTerms.size() > 0) {
-							 System.out.println(1);
+							 printStatus();
 							 root.add(current);
 							 treeSize++;
 						 }
@@ -240,7 +239,13 @@ public class Program5 extends AbstractWebCrawler {
 	 preorderTraversalPrint(root);
 	 return root;
  }
- /**
+ 
+ 
+ 	private void printStatus() {
+	 	System.out.println( (((double)treeSize / (double) resultsLimit) * 100) + "%" );
+ 	}
+
+/**
 	* Crawl the web looking for pages containing the specified search terms.
 	* @param WebTreeNode node to search for links in
 	* @param Set<String> pages visited
