@@ -58,9 +58,9 @@ public class Program5 extends AbstractWebCrawler {
 				"redbull.com", "maa.org", "teardropshop.com", "golittleguy.com", "abcl.org", "dieselsweeties.com",
 				"icptrack.com", "adtechus.com", "vrdconf.com", "gdceurope.com", "gdconf.com", "webscribble.com",
 				"jobs.gamasutra.com", "darkreading.com", "www.gdcvault.com", "gamecareerguide.com", "aoir.org",
-				"capterra.com", "www.google.com", "academyart.edu", "bing.com", "www.darkreading.com", "www.blackhat.com" };
+				"capterra.com", "www.google.com", "academyart.edu", "bing.com"};
 
-		Program5 prog = new Program5(25, blacklist);
+		Program5 prog = new Program5(50, blacklist);
 		 // prog.crawlWeb( "www.cs.rhodes.edu", 80, "/~kirlinp/courses/cs1/f15/",
  		 //		"game", "animation", "java", "loop" );
 		 // prog.crawlWeb( "planet.lisp.org", 80, "/", "car", "cdr" );
@@ -149,8 +149,8 @@ public class Program5 extends AbstractWebCrawler {
 		System.out.print(root.searchTerms[root.searchTerms.length - 1] + "]\n");
 		System.out.println("Number of pages searched : " + visited.size());
 
-		System.out.println("URL's\n");
-		// Replaced print method with toString from abstract class
+		System.out.println("URL's\n" + root.matchedSearchTerms.toString() + root.domain + root.page);
+		// Replaced print method with toString from WebTreeNode
 		System.out.println("\nTREE\n" + root.toString());
 	}
 
@@ -230,10 +230,10 @@ public class Program5 extends AbstractWebCrawler {
 				  // FGHI = children of B : JKLM  = children of F      B/  \C\D\E
 					//																					  	    F/   \G\H\I
 					//                                                 J/  \K\L\M
-					for (WebTreeNode wtn : root.children) {
-						if (treeSize < resultsLimit)
-							crawlWeb(wtn, visited, searchTerms); //Crawls web over root's children
-					}
+				}
+				for (WebTreeNode wtn : root.children) {
+					if (treeSize < resultsLimit)
+						crawlWeb(wtn, visited, searchTerms);
 			}
 		}
 	}
@@ -275,13 +275,13 @@ public class Program5 extends AbstractWebCrawler {
 							root.add(current);
 							treeSize++;
 						}
-					}
+						}
+						}
 					}
 				}
-			for (WebTreeNode wtn : root.children) {
-				if (treeSize < resultsLimit)
-					crawlWeb(wtn, visited, searchTerms); //Crawls web over root's children
-				}
+				for (WebTreeNode wtn : root.children) {
+					if (treeSize < resultsLimit)
+						crawlWeb(wtn, visited, searchTerms); //Crawls web over root's children
 			}
 		}
 	}
@@ -362,6 +362,8 @@ public class Program5 extends AbstractWebCrawler {
 	 */
 	private ArrayList<String> hasTerms(String html, String... searchTerms) {
 		ArrayList<String> matchedTerms = new ArrayList<String>();
+		if (html == null)
+			return matchedTerms;
 		//Tests if page has search terms within
 		for (String s : searchTerms)
 			if (html.contains(s))
