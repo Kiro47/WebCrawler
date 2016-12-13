@@ -28,9 +28,11 @@ public class Program5 extends AbstractWebCrawler {
  /**
 	*  Used for blacklisted file extensions that should be ignored.
 	*/
- protected List<String> blacklistedExtensions = Arrays.asList(".dtd", ".exe", ".png", ".jpg", ".gif", ".mp3", ".mpg", ".mp4", ".mov", ".mkv");
+ protected List<String> blacklistedExtensions = Arrays.asList(".dtd", ".exe", ".png", ".jpg",
+            ".gif", ".mp3", ".mpg", ".mp4", ".mov", ".mkv", ".com&nbsp;&#8250;&#32;");
 
  protected int treeSize = 1;
+ private int time = 0;
 
  protected	Set<String> visited = new HashSet<String>();
  /**
@@ -61,12 +63,11 @@ public class Program5 extends AbstractWebCrawler {
 			 "capterra.com", "www.google.com", "academyart.edu", "bing.com"};
 
 	 Program5 prog = new Program5(50, blacklist);
-	 
-		// prog.crawlWeb( "www.cs.rhodes.edu", 80, "/~kirlinp/courses/cs1/f15/",
-			//		"game", "animation", "java", "loop" );
+
+		 //prog.crawlWeb( "www.cs.rhodes.edu", 80, "/~kirlinp/courses/cs1/f15/", "game", "animation", "java", "loop" );
 		// prog.crawlWeb( "planet.lisp.org", 80, "/", "car", "cdr" );
-		 prog.crawlWeb( "www.gamasutra.com", 80, "/", "multiplayer", "game design", "patterns" );
-	 //  prog.crawlWeb("citeseerx.ist.psu.edu", 80, "/search?q=Game+Design", "multiplayer", "game design", "patterns"); //FYI This link has a daily limit to access
+	    prog.crawlWeb( "www.gamasutra.com", 80, "/", "multiplayer", "game design", "patterns" );
+    // prog.crawlWeb("citeseerx.ist.psu.edu", 80, "/search?q=Game+Design", "multiplayer", "game design", "patterns"); //FYI This link has a daily limit to access
  }
 
 
@@ -148,11 +149,15 @@ public class Program5 extends AbstractWebCrawler {
 	 System.out.print(root.searchTerms[root.searchTerms.length - 1] + "]\n");
 	 System.out.println("Number of pages searched : " + visited.size());
 
-	 System.out.println("URL's\n" + root.matchedSearchTerms.toString() + root.domain + root.page);
-	 // Replaced print method with toString from WebTreeNode
+	 System.out.println("URL's");
+   printNodes(root);
 	 System.out.println("\nTREE\n" + root.toString());
  }
-
+ private void printNodes(WebTreeNode root) {
+   System.out.println(root.matchedSearchTerms.toString() + root.domain + root.page);
+   for (WebTreeNode child : root.children)
+    printNodes(child);
+ }
  /**
 	* Crawl the web looking for pages containing the specified search terms.
 	* Begin at the specified domain, port, and page. Then follow links.
@@ -234,13 +239,17 @@ public class Program5 extends AbstractWebCrawler {
 				 if (treeSize < resultsLimit)
 					 crawlWeb(wtn, visited, searchTerms);
 		 }
+     System.out.println("Done!");
+     break;
 	 }
  }
 	 preorderTraversalPrint(root);
+   visited.clear();
+   treeSize = 1;
 	 return root;
  }
- 
- 
+
+
  	private void printStatus() {
 	 	System.out.println( (((double)treeSize / (double) resultsLimit) * 100) + "%" );
  	}
@@ -254,7 +263,6 @@ public class Program5 extends AbstractWebCrawler {
 	*/
  public void crawlWeb(WebTreeNode root,Set<String> visited, String... searchTerms) {
 	 // Crawl until results limit is reached.
-	 while (treeSize < resultsLimit) {
 		 // Ensure domain has http protocol.
 		 if (root.domain != null && !root.domain.isEmpty())
 			 if (!root.domain.startsWith("http://") && !root.domain.startsWith("https://"))
@@ -276,19 +284,14 @@ public class Program5 extends AbstractWebCrawler {
 				 if (webContent != null) {
 					 current.matchedSearchTerms = hasTerms(webContent, searchTerms);
 					 if (current.matchedSearchTerms.size() > 0) {
-						 System.out.println(1);
+						 printStatus();
 						 root.add(current);
 						 treeSize++;
 					 }
 					 }
 					 }
-				 }
-			 }
-			 for (WebTreeNode wtn : root.children) {
-				 if (treeSize < resultsLimit)
-					 crawlWeb(wtn, visited, searchTerms); //Crawls web over root's children
+				 } //Crawls web over root's children
 		 }
-	 }
  }
 
 
@@ -297,13 +300,21 @@ public class Program5 extends AbstractWebCrawler {
 	*
 	* @param url
 	* @return String
-	* @author Stephen Reynolds
+	* @author Stephen Reynolds, Brandon Paupore
 	*/
  private String getDomain(String url) {
+   if (url == null || url.equals(""))
+    return "";
 	 URI uri = null;
 	 try {
 		 uri = new URI(url);
 	 } catch (URISyntaxException e) {
+     try {
+       uri = new URI("");
+     }
+     catch(URISyntaxException f) {
+       f.printStackTrace();
+     }
 		 e.printStackTrace();
 	 }
 	 return uri.getHost();
@@ -319,7 +330,7 @@ public class Program5 extends AbstractWebCrawler {
  private String getPage(String url) {
 	 String domain = getDomain(url);
 	 // Null Check
-	 if (domain == null) {
+	 if (domain == null || domain.isEmpty()) {
 		 url = "";
 	 }
 	 // If it's a home page it would return
@@ -351,9 +362,10 @@ public class Program5 extends AbstractWebCrawler {
 		 }
 		 // If the linkURL extension isn't blacklisted add it.
 		 // Accounts for one and two letter extensions as well.
-		 if (linkUrl.contains("."))
-			 if (!blacklistedExtensions.contains(linkUrl.substring(linkUrl.lastIndexOf('.'))))
-				 links.add(linkUrl);
+     if (linkUrl != null || !linkUrl.isEmpty())
+		   if (linkUrl.contains("."))
+			    if (!blacklistedExtensions.contains(linkUrl.substring(linkUrl.lastIndexOf('.'))))
+				      links.add(linkUrl);
 
 	 }
 	 return links;
